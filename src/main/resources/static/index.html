@@ -80,6 +80,17 @@ main{position:relative;z-index:10;flex:1;padding:24px 36px;overflow-y:auto}
 .log-ok{color:var(--ok)}.log-err{color:var(--err)}.log-info{color:var(--accent)}.log-warn{color:var(--warn)}
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 20px;font-family:'DM Mono',monospace;font-size:12px;z-index:999;transition:transform .3s cubic-bezier(.175,.885,.32,1.275);white-space:nowrap;pointer-events:none}
 #toast.show{transform:translateX(-50%) translateY(0)}
+/* ── Success Modal ── */
+#success-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .25s}
+#success-modal.show{opacity:1;pointer-events:all}
+.modal-box{background:var(--surface);border:1px solid rgba(0,201,122,.3);border-radius:20px;padding:36px 40px;text-align:center;max-width:340px;width:90%;transform:scale(.9);transition:transform .25s cubic-bezier(.175,.885,.32,1.275)}
+#success-modal.show .modal-box{transform:scale(1)}
+.modal-icon{font-size:52px;margin-bottom:16px;display:block;animation:pop .4s cubic-bezier(.175,.885,.32,1.275)}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.modal-title{font-size:20px;font-weight:800;color:var(--ok);margin-bottom:8px}
+.modal-sub{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:24px}
+.modal-close{padding:10px 32px;background:linear-gradient(135deg,var(--ok),#00a060);color:#000;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:transform .15s}
+.modal-close:active{transform:scale(.97)}
 footer{text-align:center;padding:16px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);border-top:1px solid var(--border);position:relative;z-index:10}
 @media(max-width:720px){header,.tab-bar,main{padding-left:14px;padding-right:14px}.grid2{grid-template-columns:1fr}}
 </style>
@@ -210,6 +221,15 @@ footer{text-align:center;padding:16px;font-family:'DM Mono',monospace;font-size:
   </div>
 </main>
 <footer>Running on &#9749; Spring Boot &middot; Render Free Tier &middot; <span id="render-url">-</span></footer>
+<!-- Success Modal -->
+<div id="success-modal" onclick="closeModal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <span class="modal-icon">&#9989;</span>
+    <div class="modal-title">Settings Saved!</div>
+    <div class="modal-sub" id="modal-sub">Your configuration has been saved.<br/>You are ready to deploy your JAR.</div>
+    <button class="modal-close" onclick="closeModal()">Got it!</button>
+  </div>
+</div>
 <div id="toast"></div>
 <script>
 let tasks=[],filt='all',selFile=null;
@@ -218,7 +238,7 @@ addEventListener('DOMContentLoaded',()=>{loadCfgUI();regSW();loadInfo();loadTask
 async function regSW(){if('serviceWorker' in navigator){try{await navigator.serviceWorker.register('/service-worker.js');document.getElementById('sw-s').textContent='Active';document.getElementById('sw-o').textContent='Yes';}catch{document.getElementById('sw-s').textContent='Failed';}}const sa=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone;document.getElementById('sw-i').textContent=sa?'Yes':'Not yet';}
 function sw(tab,btn){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));document.getElementById('view-'+tab).classList.add('active');btn.classList.add('active');}
 function loadCfgUI(){if(cfg.backendUrl)document.getElementById('cfg-url').value=cfg.backendUrl;if(cfg.ghToken)document.getElementById('cfg-token').value=cfg.ghToken;if(cfg.ghRepo)document.getElementById('cfg-repo').value=cfg.ghRepo;if(cfg.ghPath)document.getElementById('cfg-path').value=cfg.ghPath;if(cfg.hook)document.getElementById('cfg-hook').value=cfg.hook;}
-function saveCfg(){cfg.backendUrl=document.getElementById('cfg-url').value.trim().replace(/\/$/,'');cfg.ghToken=document.getElementById('cfg-token').value.trim();cfg.ghRepo=document.getElementById('cfg-repo').value.trim();cfg.ghPath=document.getElementById('cfg-path').value.trim()||'target/demo-app-1.0.0.jar';cfg.hook=document.getElementById('cfg-hook').value.trim();localStorage.setItem('cfg',JSON.stringify(cfg));document.getElementById('render-url').textContent=cfg.backendUrl||'-';toast('Settings saved');loadInfo();loadTasks();}
+function saveCfg(){cfg.backendUrl=document.getElementById('cfg-url').value.trim().replace(/\/$/,'');cfg.ghToken=document.getElementById('cfg-token').value.trim();cfg.ghRepo=document.getElementById('cfg-repo').value.trim();cfg.ghPath=document.getElementById('cfg-path').value.trim()||'target/demo-app-1.0.0.jar';cfg.hook=document.getElementById('cfg-hook').value.trim();localStorage.setItem('cfg',JSON.stringify(cfg));document.getElementById('render-url').textContent=cfg.backendUrl||'-';showModal();loadInfo();loadTasks();}function showModal(){const sub=document.getElementById('modal-sub');const lines=[];if(cfg.backendUrl)lines.push('Backend: '+cfg.backendUrl);if(cfg.ghRepo)lines.push('Repo: '+cfg.ghRepo);if(cfg.ghToken)lines.push('GitHub Token: saved');if(cfg.hook)lines.push('Render Hook: saved');sub.innerHTML=lines.join('<br/>')||'Configuration saved successfully.';document.getElementById('success-modal').classList.add('show');}function closeModal(){document.getElementById('success-modal').classList.remove('show');}
 async function testConn(){if(!cfg.backendUrl){toast('Set backend URL first');return;}try{const r=await fetch(cfg.backendUrl+'/actuator/health',{signal:AbortSignal.timeout(5000)});const d=await r.json();toast(d.status==='UP'?'Backend is UP!':'Status: '+d.status);}catch{toast('Cannot reach backend');}}
 const api=()=>cfg.backendUrl||'';
 async function loadTasks(){try{const r=await fetch(api()+'/api/tasks');tasks=await r.json();render('tl-dash',tasks.slice(0,6));render('tl-tasks',filt==='all'?tasks:tasks.filter(t=>t.status===filt));stats();setDot('up');}catch{setDot('down');}}

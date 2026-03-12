@@ -4,194 +4,267 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Demo App</title>
+<link rel="manifest" href="manifest.json"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0d0d14;--surface:#14141f;--border:#1f1f30;
-  --accent:#00e5ff;--accent2:#7c3aed;--text:#e8e8f8;--muted:#6b6b88;
-  --ok:#00c97a;--warn:#f59e0b;--err:#ff4f6d;--r:14px;
-}
+:root{--bg:#0d0d14;--surface:#14141f;--border:#1f1f30;--accent:#00e5ff;--accent2:#7c3aed;--text:#e8e8f8;--muted:#6b6b88;--ok:#00c97a;--warn:#f59e0b;--err:#ff4f6d;--r:14px;}
 html{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',sans-serif}
-body{min-height:100vh;display:flex;flex-direction:column}
-body::before{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:
-    radial-gradient(ellipse at 15% 10%,rgba(0,229,255,.06) 0%,transparent 55%),
-    radial-gradient(ellipse at 85% 80%,rgba(124,58,237,.08) 0%,transparent 55%);
-}
-header{
-  position:relative;z-index:10;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:28px 40px;border-bottom:1px solid var(--border);
-  background:rgba(13,13,20,.8);backdrop-filter:blur(20px);
-}
+body{min-height:100dvh;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 15% 10%,rgba(0,229,255,.06) 0%,transparent 55%),radial-gradient(ellipse at 85% 80%,rgba(124,58,237,.08) 0%,transparent 55%);}
+header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:24px 36px;border-bottom:1px solid var(--border);background:rgba(13,13,20,.85);backdrop-filter:blur(20px);}
 .brand{display:flex;align-items:center;gap:12px}
-.brand-icon{
-  width:42px;height:42px;border-radius:12px;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  display:flex;align-items:center;justify-content:center;font-size:20px;
-}
-.brand-name{font-size:20px;font-weight:800;letter-spacing:-0.5px}
+.brand-icon{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:18px;}
+.brand-name{font-size:18px;font-weight:800;letter-spacing:-0.5px}
 .brand-ver{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:2px}
 .pill{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;border:1px solid var(--border);background:var(--surface);font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)}
-.dot{width:7px;height:7px;border-radius:50%}
-.dot.up{background:var(--ok);box-shadow:0 0 8px var(--ok)}
-.dot.down{background:var(--err)}
-main{position:relative;z-index:10;display:grid;grid-template-columns:280px 1fr;gap:24px;max-width:1100px;width:100%;margin:0 auto;padding:36px 24px;flex:1}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:0}
-.card-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:18px}
-.stat-block{display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--border)}
-.stat-block:last-child{border-bottom:none}
-.stat-icon{font-size:22px;width:36px;text-align:center}
-.stat-val{font-size:22px;font-weight:800;line-height:1}
-.stat-key{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px}
-.info-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
-.info-row:last-child{border-bottom:none}
-.info-row span:first-child{color:var(--muted);font-family:'DM Mono',monospace;font-size:12px}
-.info-row span:last-child{font-weight:600}
-.panel{display:flex;flex-direction:column;gap:20px}
-.input-row{display:flex;gap:10px}
-.input-row input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s}
-.input-row input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,255,.1)}
-.btn{padding:12px 22px;border:none;border-radius:10px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;transition:transform .15s,opacity .2s;white-space:nowrap}
-.btn:active{transform:scale(0.97)}
-.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000}
-.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
-.task-list{display:flex;flex-direction:column;gap:10px}
-.task-item{display:flex;align-items:center;gap:14px;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px 18px;animation:rise .3s ease both;transition:border-color .2s}
-.task-item:hover{border-color:rgba(0,229,255,.2)}
-@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.task-status{flex-shrink:0;padding:4px 10px;border-radius:999px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.5px;font-weight:500}
-.status-done{background:rgba(0,201,122,.12);color:var(--ok)}
-.status-in-progress{background:rgba(245,158,11,.12);color:var(--warn)}
-.status-todo{background:rgba(107,107,136,.12);color:var(--muted)}
-.task-title{flex:1;font-size:14px;font-weight:600}
-.task-id{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)}
-.task-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:4px 8px;border-radius:6px;transition:color .2s,background .2s}
-.task-del:hover{color:var(--err);background:rgba(255,79,109,.1)}
-.empty{text-align:center;padding:48px;color:var(--muted);font-family:'DM Mono',monospace;font-size:13px}
-.empty-icon{font-size:48px;margin-bottom:12px}
-.filter-bar{display:flex;gap:8px;flex-wrap:wrap}
-.filter-btn{padding:6px 14px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;transition:all .2s}
-.filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,.08)}
-#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 22px;font-family:'DM Mono',monospace;font-size:13px;z-index:999;transition:transform .3s cubic-bezier(.175,.885,.32,1.275);white-space:nowrap;pointer-events:none}
+.dot{width:7px;height:7px;border-radius:50%;transition:all .3s}
+.dot.up{background:var(--ok);box-shadow:0 0 8px var(--ok)}.dot.down{background:var(--err)}.dot.pulse{background:var(--warn);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.tab-bar{position:relative;z-index:10;display:flex;gap:2px;padding:0 36px;background:rgba(13,13,20,.85);border-bottom:1px solid var(--border);}
+.tab{padding:12px 18px;border:none;background:none;color:var(--muted);cursor:pointer;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;}
+.tab:hover{color:var(--text)}.tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(0,229,255,.04)}
+main{position:relative;z-index:10;flex:1;padding:24px 36px;overflow-y:auto}
+.view{display:none;animation:fade .2s ease}.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.grid2{display:grid;grid-template-columns:250px 1fr;gap:18px}
+.col{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.lbl{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:14px}
+.stat-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.stat-row:last-child{border-bottom:none}
+.stat-icon{font-size:18px;width:28px;text-align:center}.stat-val{font-size:20px;font-weight:800;line-height:1}.stat-key{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:2px}
+.irow{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}.irow:last-child{border-bottom:none}
+.irow span:first-child{color:var(--muted);font-family:'DM Mono',monospace;font-size:11px}.irow span:last-child{font-weight:600}
+.field{margin-bottom:12px}.field label{display:block;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:5px}
+.field input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 13px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s}
+.field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,255,.1)}
+.row{display:flex;gap:10px}.row input{flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 20px;border:none;border-radius:10px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;transition:transform .15s,opacity .2s;white-space:nowrap}
+.btn:active{transform:scale(.97)}.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-p{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000}
+.btn-g{background:transparent;border:1px solid var(--border);color:var(--text)}.btn-w{width:100%}
+.tasks{display:flex;flex-direction:column;gap:9px}
+.ti{display:flex;align-items:center;gap:12px;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px 15px;animation:rise .3s ease both;transition:border-color .2s}
+.ti:hover{border-color:rgba(0,229,255,.2)}
+.ts{flex-shrink:0;padding:3px 9px;border-radius:999px;font-family:'DM Mono',monospace;font-size:10px}
+.ts-done{background:rgba(0,201,122,.12);color:var(--ok)}.ts-in-progress{background:rgba(245,158,11,.12);color:var(--warn)}.ts-todo{background:rgba(107,107,136,.12);color:var(--muted)}
+.tt{flex:1;font-size:13px;font-weight:600}.tid{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)}
+.tdel{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:3px 7px;border-radius:6px;transition:color .2s,background .2s}
+.tdel:hover{color:var(--err);background:rgba(255,79,109,.1)}
+.fbr{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.fb{padding:5px 13px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;transition:all .2s}
+.fb.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,.08)}
+.empty{text-align:center;padding:40px;color:var(--muted);font-family:'DM Mono',monospace;font-size:12px}.empty-i{font-size:36px;margin-bottom:10px}
+.drop-zone{border:2px dashed var(--border);border-radius:var(--r);padding:44px 20px;text-align:center;cursor:pointer;transition:all .25s;background:var(--bg);position:relative;}
+.drop-zone:hover,.drop-zone.over{border-color:var(--accent);background:rgba(0,229,255,.04);}
+.drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.dz-icon{font-size:44px;margin-bottom:14px;display:block}.dz-title{font-size:15px;font-weight:700;margin-bottom:5px}.dz-sub{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)}
+.jar-info{display:none;align-items:center;gap:13px;background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.2);border-radius:12px;padding:14px 16px;margin-top:12px;}
+.jar-info.show{display:flex}.ji-name{font-weight:700;font-size:14px}.ji-size{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:2px}
+.prog{margin-top:12px;display:none}.prog.show{display:block}
+.prog-hd{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:7px;display:flex;justify-content:space-between}
+.prog-bar{height:5px;background:var(--border);border-radius:999px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;transition:width .35s ease;width:0}
+.steps{display:flex;gap:0;margin-bottom:22px}
+.step{flex:1;text-align:center;position:relative}
+.step::after{content:'';position:absolute;top:13px;left:50%;width:100%;height:2px;background:var(--border);z-index:0}
+.step:last-child::after{display:none}
+.sd{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;margin:0 auto 7px;font-size:10px;position:relative;z-index:1;transition:all .3s;font-family:'DM Mono',monospace}
+.step.done .sd{background:var(--ok);border-color:var(--ok);color:#000}
+.step.active .sd{background:var(--accent);border-color:var(--accent);color:#000}
+.sl{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)}.step.active .sl{color:var(--accent)}.step.done .sl{color:var(--ok)}
+.log{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-family:'DM Mono',monospace;font-size:12px;line-height:1.9;max-height:200px;overflow-y:auto;margin-top:12px}
+.log-ok{color:var(--ok)}.log-err{color:var(--err)}.log-info{color:var(--accent)}.log-warn{color:var(--warn)}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 20px;font-family:'DM Mono',monospace;font-size:12px;z-index:999;transition:transform .3s cubic-bezier(.175,.885,.32,1.275);white-space:nowrap;pointer-events:none}
 #toast.show{transform:translateX(-50%) translateY(0)}
-footer{text-align:center;padding:20px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);border-top:1px solid var(--border);position:relative;z-index:10}
-@media(max-width:700px){header{padding:20px}main{grid-template-columns:1fr;padding:20px 16px}}
+footer{text-align:center;padding:16px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);border-top:1px solid var(--border);position:relative;z-index:10}
+@media(max-width:720px){header,.tab-bar,main{padding-left:14px;padding-right:14px}.grid2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <header>
   <div class="brand">
-    <div class="brand-icon">⚡</div>
-    <div>
-      <div class="brand-name">Demo App</div>
-      <div class="brand-ver">v1.0.0 · Spring Boot</div>
-    </div>
+    <div class="brand-icon">&#9889;</div>
+    <div><div class="brand-name">Demo App</div><div class="brand-ver">v1.0.0 &middot; Spring Boot</div></div>
   </div>
-  <div class="pill">
-    <div class="dot up" id="status-dot"></div>
-    <span id="status-text">checking…</span>
-  </div>
+  <div class="pill"><div class="dot pulse" id="sdot"></div><span id="stxt">checking&hellip;</span></div>
 </header>
-
+<div class="tab-bar">
+  <button class="tab active" onclick="sw('dashboard',this)">&#128202; Dashboard</button>
+  <button class="tab" onclick="sw('tasks',this)">&#128203; Tasks</button>
+  <button class="tab" onclick="sw('upload',this)">&#128640; Deploy JAR</button>
+  <button class="tab" onclick="sw('settings',this)">&#9881;&#65039; Settings</button>
+</div>
 <main>
-  <aside style="display:flex;flex-direction:column;gap:16px">
-    <div class="card">
-      <div class="card-label">📊 Stats</div>
-      <div class="stat-block"><div class="stat-icon">📋</div><div><div class="stat-val" id="stat-total">—</div><div class="stat-key">Total Tasks</div></div></div>
-      <div class="stat-block"><div class="stat-icon">✅</div><div><div class="stat-val" id="stat-done">—</div><div class="stat-key">Done</div></div></div>
-      <div class="stat-block"><div class="stat-icon">⚡</div><div><div class="stat-val" id="stat-prog">—</div><div class="stat-key">In Progress</div></div></div>
-      <div class="stat-block"><div class="stat-icon">🔲</div><div><div class="stat-val" id="stat-todo">—</div><div class="stat-key">To Do</div></div></div>
-    </div>
-    <div class="card">
-      <div class="card-label">🖥 Server Info</div>
-      <div id="info-rows"><div style="color:var(--muted);font-family:'DM Mono',monospace;font-size:12px">loading…</div></div>
-    </div>
-  </aside>
-
-  <div class="panel">
-    <div class="card">
-      <div class="card-label">➕ Add Task</div>
-      <div class="input-row">
-        <input type="text" id="task-input" placeholder="What needs to be done?" onkeydown="if(event.key==='Enter')addTask()"/>
-        <button class="btn btn-primary" onclick="addTask()">Add Task</button>
+  <!-- DASHBOARD -->
+  <div class="view active" id="view-dashboard">
+    <div class="grid2">
+      <div class="col">
+        <div class="card">
+          <div class="lbl">Stats</div>
+          <div class="stat-row"><div class="stat-icon">&#128203;</div><div><div class="stat-val" id="s-total">-</div><div class="stat-key">Total</div></div></div>
+          <div class="stat-row"><div class="stat-icon">&#9989;</div><div><div class="stat-val" id="s-done">-</div><div class="stat-key">Done</div></div></div>
+          <div class="stat-row"><div class="stat-icon">&#9889;</div><div><div class="stat-val" id="s-prog">-</div><div class="stat-key">In Progress</div></div></div>
+          <div class="stat-row"><div class="stat-icon">&#11036;</div><div><div class="stat-val" id="s-todo">-</div><div class="stat-key">Todo</div></div></div>
+        </div>
+        <div class="card"><div class="lbl">Server Info</div><div id="info-rows"><div style="color:var(--muted);font-family:'DM Mono',monospace;font-size:12px">loading&hellip;</div></div></div>
       </div>
-    </div>
-
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        <div class="card-label" style="margin:0">📋 Task Board</div>
-        <div class="filter-bar">
-          <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
-          <button class="filter-btn" onclick="setFilter('todo',this)">Todo</button>
-          <button class="filter-btn" onclick="setFilter('in-progress',this)">Active</button>
-          <button class="filter-btn" onclick="setFilter('done',this)">Done</button>
+      <div class="col">
+        <div class="card"><div class="lbl">Quick Add</div>
+          <div class="row"><input type="text" id="ti-dash" placeholder="New task&hellip;" onkeydown="if(event.key==='Enter')addTask('dash')"/>
+          <button class="btn btn-p" onclick="addTask('dash')">Add</button></div>
+        </div>
+        <div class="card" style="flex:1"><div class="lbl">Recent Tasks</div>
+          <div class="tasks" id="tl-dash"><div class="empty"><div class="empty-i">&#8987;</div>Loading&hellip;</div></div>
         </div>
       </div>
-      <div class="task-list" id="task-list">
-        <div class="empty"><div class="empty-icon">⏳</div>Loading…</div>
-      </div>
     </div>
   </div>
+  <!-- TASKS -->
+  <div class="view" id="view-tasks">
+    <div class="card" style="margin-bottom:14px"><div class="lbl">Add Task</div>
+      <div class="row"><input type="text" id="ti-tasks" placeholder="What needs to be done?" onkeydown="if(event.key==='Enter')addTask('tasks')"/>
+      <button class="btn btn-p" onclick="addTask('tasks')">Add Task</button></div>
+    </div>
+    <div class="card">
+      <div class="fbr">
+        <button class="fb active" onclick="sf('all',this)">All</button>
+        <button class="fb" onclick="sf('todo',this)">Todo</button>
+        <button class="fb" onclick="sf('in-progress',this)">Active</button>
+        <button class="fb" onclick="sf('done',this)">Done</button>
+      </div>
+      <div class="tasks" id="tl-tasks"><div class="empty"><div class="empty-i">&#8987;</div>Loading&hellip;</div></div>
+    </div>
+  </div>
+  <!-- DEPLOY JAR -->
+  <div class="view" id="view-upload">
+    <div class="steps">
+      <div class="step active" id="st1"><div class="sd">1</div><div class="sl">Select JAR</div></div>
+      <div class="step" id="st2"><div class="sd">2</div><div class="sl">Read File</div></div>
+      <div class="step" id="st3"><div class="sd">3</div><div class="sl">Push GitHub</div></div>
+      <div class="step" id="st4"><div class="sd">4</div><div class="sl">Redeploy</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="card">
+        <div class="lbl">Select JAR File</div>
+        <div class="drop-zone" id="dzone" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="onDrop(event)">
+          <input type="file" accept=".jar" onchange="onFile(this.files[0])" id="finput"/>
+          <span class="dz-icon">&#9749;</span>
+          <div class="dz-title">Drop JAR here</div>
+          <div class="dz-sub">or click to browse &middot; .jar only</div>
+        </div>
+        <div class="jar-info" id="jinfo">
+          <div style="font-size:26px">&#128230;</div>
+          <div style="flex:1"><div class="ji-name" id="jname">-</div><div class="ji-size" id="jsize">-</div></div>
+          <button class="btn btn-g" onclick="clearFile()" style="padding:7px 12px;font-size:12px">&#10005;</button>
+        </div>
+        <div class="prog" id="prog">
+          <div class="prog-hd"><span id="plabel">Uploading&hellip;</span><span id="ppct">0%</span></div>
+          <div class="prog-bar"><div class="prog-fill" id="pfill"></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="lbl">One-Click Deploy</div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:16px">
+          Pushes your new JAR to GitHub, then triggers Render to auto-redeploy your live app.<br/><br/>
+          Configure <strong style="color:var(--text)">GitHub Token</strong>, <strong style="color:var(--text)">Repo</strong> and <strong style="color:var(--text)">Render Hook</strong> in Settings first.
+        </p>
+        <button class="btn btn-p btn-w" id="dbtn" onclick="deployJar()" disabled>&#128640; Upload &amp; Deploy</button>
+        <div style="margin-top:12px;text-align:center">
+          <a href="https://dashboard.render.com" target="_blank" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-decoration:none">Open Render Dashboard &#8594;</a>
+        </div>
+      </div>
+    </div>
+    <div class="card"><div class="lbl">Deploy Log</div>
+      <div class="log" id="dlog"><span class="log-info">// Ready &mdash; select a JAR to begin</span></div>
+    </div>
+  </div>
+  <!-- SETTINGS -->
+  <div class="view" id="view-settings">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card"><div class="lbl">Backend</div>
+        <div class="field"><label>Backend URL (Render)</label><input type="url" id="cfg-url" placeholder="https://jar-mobile-app.onrender.com"/></div>
+        <button class="btn btn-g btn-w" onclick="testConn()">Test Connection</button>
+      </div>
+      <div class="card"><div class="lbl">GitHub Config</div>
+        <div class="field"><label>Personal Access Token (repo scope)</label><input type="password" id="cfg-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"/></div>
+        <div class="field"><label>Repository (username/repo)</label><input type="text" id="cfg-repo" placeholder="komal/demo-spring-app"/></div>
+        <div class="field"><label>JAR path in repo</label><input type="text" id="cfg-path" placeholder="target/demo-app-1.0.0.jar"/></div>
+      </div>
+      <div class="card"><div class="lbl">Render Deploy Hook</div>
+        <div class="field"><label>Deploy Hook URL</label><input type="text" id="cfg-hook" placeholder="https://api.render.com/deploy/srv-xxx?key=xxx"/></div>
+        <p style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);line-height:1.8">Render Dashboard &rarr; Your Service<br/>&rarr; Settings &rarr; Deploy Hook &rarr; Copy URL</p>
+      </div>
+      <div class="card"><div class="lbl">PWA Status</div>
+        <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);line-height:2.2">
+          <div>Service Worker: <span id="sw-s" style="color:var(--accent)">-</span></div>
+          <div>Offline Cache: <span id="sw-o" style="color:var(--accent)">-</span></div>
+          <div>Installed: <span id="sw-i" style="color:var(--accent)">-</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:14px"><button class="btn btn-p" onclick="saveCfg()">Save Settings</button></div>
+  </div>
 </main>
-
-<footer>Running on ☕ Spring Boot 3 · Embedded Tomcat · Port 8080</footer>
+<footer>Running on &#9749; Spring Boot &middot; Render Free Tier &middot; <span id="render-url">-</span></footer>
 <div id="toast"></div>
-
 <script>
-let allTasks=[], filter='all';
-
-async function loadTasks(){
-  try{const r=await fetch('/api/tasks');allTasks=await r.json();renderTasks();updateStats();}
-  catch(e){showToast('⚠️ API unavailable');}
-}
-async function loadInfo(){
+let tasks=[],filt='all',selFile=null;
+let cfg=JSON.parse(localStorage.getItem('cfg')||'{}');
+addEventListener('DOMContentLoaded',()=>{loadCfgUI();regSW();loadInfo();loadTasks();if(cfg.backendUrl)document.getElementById('render-url').textContent=cfg.backendUrl;});
+async function regSW(){if('serviceWorker' in navigator){try{await navigator.serviceWorker.register('/service-worker.js');document.getElementById('sw-s').textContent='Active';document.getElementById('sw-o').textContent='Yes';}catch{document.getElementById('sw-s').textContent='Failed';}}const sa=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone;document.getElementById('sw-i').textContent=sa?'Yes':'Not yet';}
+function sw(tab,btn){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));document.getElementById('view-'+tab).classList.add('active');btn.classList.add('active');}
+function loadCfgUI(){if(cfg.backendUrl)document.getElementById('cfg-url').value=cfg.backendUrl;if(cfg.ghToken)document.getElementById('cfg-token').value=cfg.ghToken;if(cfg.ghRepo)document.getElementById('cfg-repo').value=cfg.ghRepo;if(cfg.ghPath)document.getElementById('cfg-path').value=cfg.ghPath;if(cfg.hook)document.getElementById('cfg-hook').value=cfg.hook;}
+function saveCfg(){cfg.backendUrl=document.getElementById('cfg-url').value.trim().replace(/\/$/,'');cfg.ghToken=document.getElementById('cfg-token').value.trim();cfg.ghRepo=document.getElementById('cfg-repo').value.trim();cfg.ghPath=document.getElementById('cfg-path').value.trim()||'target/demo-app-1.0.0.jar';cfg.hook=document.getElementById('cfg-hook').value.trim();localStorage.setItem('cfg',JSON.stringify(cfg));document.getElementById('render-url').textContent=cfg.backendUrl||'-';toast('Settings saved');loadInfo();loadTasks();}
+async function testConn(){if(!cfg.backendUrl){toast('Set backend URL first');return;}try{const r=await fetch(cfg.backendUrl+'/actuator/health',{signal:AbortSignal.timeout(5000)});const d=await r.json();toast(d.status==='UP'?'Backend is UP!':'Status: '+d.status);}catch{toast('Cannot reach backend');}}
+const api=()=>cfg.backendUrl||'';
+async function loadTasks(){try{const r=await fetch(api()+'/api/tasks');tasks=await r.json();render('tl-dash',tasks.slice(0,6));render('tl-tasks',filt==='all'?tasks:tasks.filter(t=>t.status===filt));stats();setDot('up');}catch{setDot('down');}}
+async function loadInfo(){try{const[h,i]=await Promise.all([fetch(api()+'/actuator/health').then(r=>r.json()),fetch(api()+'/api/info').then(r=>r.json())]);setDot('up');document.getElementById('info-rows').innerHTML=[['App',i.app],['Version',i.version],['Java',i.java],['OS',i.os],['Status',h.status]].map(([k,v])=>'<div class="irow"><span>'+k+'</span><span>'+v+'</span></div>').join('');}catch{setDot('down');document.getElementById('info-rows').innerHTML='<div style="color:var(--err);font-family:DM Mono,monospace;font-size:12px">Cannot reach server</div>';}}
+function setDot(s){document.getElementById('sdot').className='dot '+(s==='up'?'up':s==='down'?'down':'pulse');document.getElementById('stxt').textContent=s==='up'?'online':s==='down'?'offline':'checking...';}
+async function addTask(src){const el=document.getElementById('ti-'+src),t=el.value.trim();if(!t){el.focus();return;}try{const r=await fetch(api()+'/api/tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:t})});if(r.ok){el.value='';loadTasks();toast('Task added');}}catch{toast('API unavailable');}}
+async function delTask(id){try{await fetch(api()+'/api/tasks/'+id,{method:'DELETE'});loadTasks();toast('Deleted');}catch{toast('Failed');}}
+function sf(f,btn){filt=f;document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render('tl-tasks',f==='all'?tasks:tasks.filter(t=>t.status===f));}
+function render(id,list){const el=document.getElementById(id);if(!list.length){el.innerHTML='<div class="empty"><div class="empty-i">Nothing here!</div></div>';return;}el.innerHTML=list.map((t,i)=>'<div class="ti" style="animation-delay:'+i*30+'ms"><span class="ts ts-'+t.status+'">'+t.status.replace('-',' ')+'</span><span class="tt">'+esc(t.title)+'</span><span class="tid">#'+t.id+'</span><button class="tdel" onclick="delTask('+t.id+')">x</button></div>').join('');}
+function stats(){document.getElementById('s-total').textContent=tasks.length;document.getElementById('s-done').textContent=tasks.filter(t=>t.status==='done').length;document.getElementById('s-prog').textContent=tasks.filter(t=>t.status==='in-progress').length;document.getElementById('s-todo').textContent=tasks.filter(t=>t.status==='todo').length;}
+function onDrop(e){e.preventDefault();document.getElementById('dzone').classList.remove('over');onFile(e.dataTransfer.files[0]);}
+function onFile(f){if(!f||!f.name.endsWith('.jar')){toast('.jar files only');return;}selFile=f;document.getElementById('jname').textContent=f.name;document.getElementById('jsize').textContent=fmtB(f.size);document.getElementById('jinfo').classList.add('show');document.getElementById('dbtn').disabled=false;setStep(1);dlog('info','Selected: '+f.name+' ('+fmtB(f.size)+')');}
+function clearFile(){selFile=null;document.getElementById('jinfo').classList.remove('show');document.getElementById('dbtn').disabled=true;document.getElementById('finput').value='';setStep(0);}
+async function deployJar(){
+  if(!selFile){toast('Select a JAR first');return;}
+  if(!cfg.ghToken||!cfg.ghRepo){toast('Set GitHub config in Settings');return;}
+  const btn=document.getElementById('dbtn');btn.disabled=true;btn.textContent='Deploying...';
   try{
-    const[health,info]=await Promise.all([fetch('/actuator/health').then(r=>r.json()),fetch('/api/info').then(r=>r.json())]);
-    document.getElementById('status-dot').className='dot up';
-    document.getElementById('status-text').textContent='online';
-    document.getElementById('info-rows').innerHTML=[['App',info.app],['Version',info.version],['Java',info.java],['OS',info.os],['Status',health.status]]
-      .map(([k,v])=>`<div class="info-row"><span>${k}</span><span>${v}</span></div>`).join('');
-  }catch{document.getElementById('status-dot').className='dot down';document.getElementById('status-text').textContent='offline';}
+    setStep(2);setProg(true,'Reading file...',10);dlog('info','Reading JAR...');
+    const b64=await toB64(selFile);dlog('ok','File read ('+fmtB(selFile.size)+')');
+    setStep(3);setProg(true,'Connecting to GitHub...',30);dlog('info','Pushing to GitHub: '+cfg.ghRepo+'...');
+    const path=cfg.ghPath||'target/demo-app-1.0.0.jar';
+    const apiURL='https://api.github.com/repos/'+cfg.ghRepo+'/contents/'+path;
+    const hdrs={'Authorization':'Bearer '+cfg.ghToken,'Content-Type':'application/json'};
+    setProg(true,'Checking existing file...',45);
+    let sha=null;
+    try{const ex=await fetch(apiURL,{headers:hdrs});if(ex.ok){const d=await ex.json();sha=d.sha;dlog('info','Found existing (SHA: '+sha.slice(0,8)+'...)');}else dlog('info','New file - creating');}catch{dlog('warn','Could not check - creating new');}
+    setProg(true,'Uploading JAR to GitHub...',65);
+    const body={message:'Deploy: '+selFile.name+' '+new Date().toLocaleString(),content:b64,...(sha?{sha}:{})};
+    const res=await fetch(apiURL,{method:'PUT',headers:hdrs,body:JSON.stringify(body)});
+    if(!res.ok){const e=await res.json();throw new Error(e.message||'GitHub error '+res.status);}
+    dlog('ok','JAR pushed to GitHub!');
+    setStep(4);setProg(true,'Triggering Render...',85);
+    if(cfg.hook){dlog('info','Triggering Render deploy...');try{await fetch(cfg.hook,{method:'POST',mode:'no-cors'});dlog('ok','Render deployment triggered!');dlog('warn','Render will redeploy in ~2-3 minutes');dlog('ok','Done! Check: '+(cfg.backendUrl||'your Render URL'));}catch{dlog('warn','Hook called - check Render dashboard to confirm');}}
+    else{dlog('warn','No Render hook set - JAR on GitHub only');dlog('info','Add hook in Settings for auto-redeploy');}
+    setProg(true,'Complete!',100);toast('Deployed! App updating in ~2 min');
+  }catch(e){dlog('err','ERROR: '+e.message);toast('Failed - see log');setProg(false,'',0);}
+  btn.disabled=false;btn.textContent='Upload & Deploy';
 }
-async function addTask(){
-  const input=document.getElementById('task-input'),title=input.value.trim();
-  if(!title){input.focus();return;}
-  try{
-    const r=await fetch('/api/tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title})});
-    if(r.ok){input.value='';loadTasks();showToast('✓ Task added');}
-  }catch{showToast('⚠️ Failed to add');}
-}
-async function deleteTask(id){
-  try{await fetch('/api/tasks/'+id,{method:'DELETE'});loadTasks();showToast('🗑 Task deleted');}
-  catch{showToast('⚠️ Failed to delete');}
-}
-function setFilter(f,btn){filter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderTasks();}
-function renderTasks(){
-  const list=document.getElementById('task-list');
-  const tasks=filter==='all'?allTasks:allTasks.filter(t=>t.status===filter);
-  if(!tasks.length){list.innerHTML='<div class="empty"><div class="empty-icon">🎉</div>No tasks here!</div>';return;}
-  list.innerHTML=tasks.map((t,i)=>`
-    <div class="task-item" style="animation-delay:${i*40}ms">
-      <span class="task-status status-${t.status}">${t.status.replace('-',' ')}</span>
-      <span class="task-title">${esc(t.title)}</span>
-      <span class="task-id">#${t.id}</span>
-      <button class="task-del" onclick="deleteTask(${t.id})">✕</button>
-    </div>`).join('');
-}
-function updateStats(){
-  document.getElementById('stat-total').textContent=allTasks.length;
-  document.getElementById('stat-done').textContent=allTasks.filter(t=>t.status==='done').length;
-  document.getElementById('stat-prog').textContent=allTasks.filter(t=>t.status==='in-progress').length;
-  document.getElementById('stat-todo').textContent=allTasks.filter(t=>t.status==='todo').length;
-}
+function toB64(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(f);});}
+function fmtB(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB';}
+function setProg(v,l,p){document.getElementById('prog').className='prog'+(v?' show':'');document.getElementById('plabel').textContent=l;document.getElementById('ppct').textContent=p+'%';document.getElementById('pfill').style.width=p+'%';}
+function setStep(n){for(let i=1;i<=4;i++){const el=document.getElementById('st'+i);el.className='step'+(i<n?' done':i===n?' active':'');el.querySelector('.sd').textContent=i<n?'v':i;}}
+function dlog(t,m){const el=document.getElementById('dlog');const d=document.createElement('div');d.className='log-'+t;d.textContent='['+new Date().toLocaleTimeString()+'] '+m;el.appendChild(d);el.scrollTop=el.scrollHeight;}
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-let toastTimer;
-function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2500);}
-loadInfo(); loadTasks();
+let tt;function toast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('show'),2800);}
 </script>
 </body>
 </html>

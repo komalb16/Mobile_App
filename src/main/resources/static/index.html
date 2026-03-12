@@ -152,48 +152,72 @@ footer{text-align:center;padding:16px;font-family:'DM Mono',monospace;font-size:
   </div>
   <!-- DEPLOY JAR -->
   <div class="view" id="view-upload">
+
     <div class="steps">
       <div class="step active" id="st1"><div class="sd">1</div><div class="sl">Select JAR</div></div>
-      <div class="step" id="st2"><div class="sd">2</div><div class="sl">Read File</div></div>
-      <div class="step" id="st3"><div class="sd">3</div><div class="sl">Push GitHub</div></div>
+      <div class="step" id="st2"><div class="sd">2</div><div class="sl">Create Release</div></div>
+      <div class="step" id="st3"><div class="sd">3</div><div class="sl">Upload JAR</div></div>
       <div class="step" id="st4"><div class="sd">4</div><div class="sl">Redeploy</div></div>
     </div>
+
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+
+      <!-- File selector -->
       <div class="card">
-        <div class="lbl">Select JAR File</div>
-        <div class="drop-zone" id="dzone" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="onDrop(event)">
+        <div class="lbl">&#128230; Select JAR File</div>
+        <div class="drop-zone" id="dzone"
+             ondragover="event.preventDefault();this.classList.add('over')"
+             ondragleave="this.classList.remove('over')"
+             ondrop="onDrop(event)">
           <input type="file" accept=".jar" onchange="onFile(this.files[0])" id="finput"/>
           <span class="dz-icon">&#9749;</span>
-          <div class="dz-title">Drop JAR here</div>
-          <div class="dz-sub">or click to browse &middot; .jar only</div>
+          <div class="dz-title">Drop any JAR here</div>
+          <div class="dz-sub">Any size &middot; uploads to GitHub Releases</div>
         </div>
         <div class="jar-info" id="jinfo">
           <div style="font-size:26px">&#128230;</div>
-          <div style="flex:1"><div class="ji-name" id="jname">-</div><div class="ji-size" id="jsize">-</div></div>
+          <div style="flex:1">
+            <div class="ji-name" id="jname">-</div>
+            <div class="ji-size" id="jsize">-</div>
+          </div>
           <button class="btn btn-g" onclick="clearFile()" style="padding:7px 12px;font-size:12px">&#10005;</button>
         </div>
-        <div class="prog" id="prog">
-          <div class="prog-hd"><span id="plabel">Uploading&hellip;</span><span id="ppct">0%</span></div>
+        <div class="prog" id="prog" style="margin-top:12px">
+          <div class="prog-hd"><span id="plabel">Uploading...</span><span id="ppct">0%</span></div>
           <div class="prog-bar"><div class="prog-fill" id="pfill"></div></div>
         </div>
       </div>
+
+      <!-- Deploy button -->
       <div class="card">
-        <div class="lbl">One-Click Deploy</div>
-        <p style="font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:16px">
-          Pushes your new JAR to GitHub, then triggers Render to auto-redeploy your live app.<br/><br/>
-          Configure <strong style="color:var(--text)">GitHub Token</strong>, <strong style="color:var(--text)">Repo</strong> and <strong style="color:var(--text)">Render Hook</strong> in Settings first.
+        <div class="lbl">&#128640; One-Click Deploy</div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.9;margin-bottom:16px">
+          Uploads your JAR to <strong style="color:var(--text)">GitHub Releases</strong> (supports any size up to 2GB), then triggers Render to redeploy automatically.<br/><br/>
+          No Git Bash needed. Works entirely from the browser.
         </p>
-        <button class="btn btn-p btn-w" id="dbtn" onclick="deployJar()" disabled>&#128640; Upload &amp; Deploy</button>
+        <button class="btn btn-p btn-w" id="dbtn" onclick="deployJar()" disabled>
+          &#128640; Upload &amp; Deploy
+        </button>
         <div style="margin-top:12px;text-align:center">
-          <a href="https://dashboard.render.com" target="_blank" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-decoration:none">Open Render Dashboard &#8594;</a>
+          <a href="https://dashboard.render.com" target="_blank"
+             style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-decoration:none">
+            Open Render Dashboard &#8594;
+          </a>
         </div>
       </div>
+
     </div>
-    <div class="card"><div class="lbl">Deploy Log</div>
-      <div class="log" id="dlog"><span class="log-info">// Ready &mdash; select a JAR to begin</span></div>
+
+    <!-- Deploy log -->
+    <div class="card">
+      <div class="lbl">&#128220; Deploy Log</div>
+      <div class="log" id="dlog">
+        <span class="log-info">// Ready &mdash; select a JAR to begin</span>
+      </div>
     </div>
+
   </div>
-  <!-- SETTINGS -->
+    <!-- SETTINGS -->
   <div class="view" id="view-settings">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
       <div class="card"><div class="lbl">Backend</div>
@@ -249,7 +273,168 @@ async function delTask(id){try{await fetch(api()+'/api/tasks/'+id,{method:'DELET
 function sf(f,btn){filt=f;document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render('tl-tasks',f==='all'?tasks:tasks.filter(t=>t.status===f));}
 function render(id,list){const el=document.getElementById(id);if(!list.length){el.innerHTML='<div class="empty"><div class="empty-i">Nothing here!</div></div>';return;}el.innerHTML=list.map((t,i)=>'<div class="ti" style="animation-delay:'+i*30+'ms"><span class="ts ts-'+t.status+'">'+t.status.replace('-',' ')+'</span><span class="tt">'+esc(t.title)+'</span><span class="tid">#'+t.id+'</span><button class="tdel" onclick="delTask('+t.id+')">x</button></div>').join('');}
 function stats(){document.getElementById('s-total').textContent=tasks.length;document.getElementById('s-done').textContent=tasks.filter(t=>t.status==='done').length;document.getElementById('s-prog').textContent=tasks.filter(t=>t.status==='in-progress').length;document.getElementById('s-todo').textContent=tasks.filter(t=>t.status==='todo').length;}
+// ── File select ──
 function onDrop(e){e.preventDefault();document.getElementById('dzone').classList.remove('over');onFile(e.dataTransfer.files[0]);}
+function onFile(f){
+  if(!f||!f.name.endsWith('.jar')){toast('.jar files only');return;}
+  selFile=f;
+  document.getElementById('jname').textContent=f.name;
+  document.getElementById('jsize').textContent=fmtB(f.size);
+  document.getElementById('jinfo').classList.add('show');
+  document.getElementById('dbtn').disabled=false;
+  setStep(1);
+  dlog('info','Selected: '+f.name+' ('+fmtB(f.size)+')');
+}
+function clearFile(){
+  selFile=null;
+  document.getElementById('jinfo').classList.remove('show');
+  document.getElementById('dbtn').disabled=true;
+  document.getElementById('finput').value='';
+  setStep(0);
+  setProg(false,'',0);
+}
+
+// ── GitHub Releases Deploy ──
+async function deployJar(){
+  if(!selFile){toast('Select a JAR first');return;}
+  if(!cfg.ghToken||!cfg.ghRepo){toast('Set GitHub Token and Repo in Settings');return;}
+
+  const btn=document.getElementById('dbtn');
+  btn.disabled=true; btn.textContent='Deploying...';
+
+  try {
+    // ── Step 1: Create GitHub Release ──
+    setStep(2); setProg(true,'Creating GitHub Release...',10);
+    dlog('info','Creating GitHub Release...');
+    const tag = 'deploy-'+Date.now();
+    const releaseRes = await fetch('https://api.github.com/repos/'+cfg.ghRepo+'/releases',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+cfg.ghToken,'Content-Type':'application/json'},
+      body: JSON.stringify({
+        tag_name: tag,
+        name: 'Deploy: '+selFile.name+' '+new Date().toLocaleString(),
+        body: 'Deployed via PWA Dashboard',
+        draft: false,
+        prerelease: false
+      })
+    });
+    if(!releaseRes.ok){
+      const e=await releaseRes.json();
+      throw new Error('Release failed: '+(e.message||releaseRes.status));
+    }
+    const release = await releaseRes.json();
+    dlog('ok','Release created: '+release.tag_name);
+
+    // ── Step 2: Upload JAR as release asset ──
+    setStep(3); setProg(true,'Uploading JAR ('+fmtB(selFile.size)+')...',25);
+    dlog('info','Uploading JAR to GitHub Release...');
+    dlog('warn','Large files may take a few minutes...');
+
+    // Use XHR for upload progress
+    const uploadUrl = release.upload_url.replace('{?name,label}','')+'?name=app.jar';
+    await uploadWithProgress(uploadUrl, selFile, cfg.ghToken);
+    dlog('ok','JAR uploaded to GitHub Release!');
+    dlog('info','Download URL: https://github.com/'+cfg.ghRepo+'/releases/tag/'+tag);
+
+    // ── Step 3: Trigger Render ──
+    setStep(4); setProg(true,'Triggering Render...',95);
+    if(cfg.hook){
+      dlog('info','Triggering Render redeploy...');
+      try{
+        await fetch(cfg.hook,{method:'POST',mode:'no-cors'});
+        dlog('ok','Render deployment triggered!');
+        dlog('warn','Render will redeploy in ~2-3 minutes...');
+        dlog('ok','Your app will update at: '+(cfg.backendUrl||'your Render URL'));
+      }catch{
+        dlog('warn','Hook called - check Render dashboard to confirm');
+      }
+    } else {
+      dlog('warn','No Render hook set - JAR uploaded to GitHub only');
+      dlog('info','Add Render Deploy Hook in Settings for auto-redeploy');
+    }
+
+    setProg(true,'Complete!',100);
+    toast('Deployed! App updating in ~2-3 min');
+    setStep(4);
+
+  } catch(e){
+    dlog('err','ERROR: '+e.message);
+    toast('Failed - see log');
+    setProg(false,'',0);
+  }
+  btn.disabled=false; btn.textContent='Upload & Deploy';
+}
+
+function uploadWithProgress(url, file, token){
+  return new Promise((resolve, reject)=>{
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    xhr.setRequestHeader('Authorization','Bearer '+token);
+    xhr.setRequestHeader('Content-Type','application/java-archive');
+    xhr.upload.onprogress = e=>{
+      if(e.lengthComputable){
+        const pct = Math.round(25 + (e.loaded/e.total)*65);
+        setProg(true,'Uploading '+fmtB(e.loaded)+' / '+fmtB(e.total)+'...',pct);
+      }
+    };
+    xhr.onload = ()=>{
+      if(xhr.status===201) resolve(JSON.parse(xhr.responseText));
+      else reject(new Error('Upload failed: HTTP '+xhr.status+' - '+xhr.responseText.slice(0,100)));
+    };
+    xhr.onerror = ()=>reject(new Error('Network error during upload'));
+    xhr.send(file);
+  });
+}
+function updateCmds(){
+  const src = document.getElementById('src-jar').value.trim() || 'test-app-2.0.0.jar';
+  const msg = document.getElementById('commit-msg').value.trim() || 'Deploy: new JAR';
+  document.getElementById('gc-copy').textContent = 'cp ../test-app/target/'+src+' target/demo-app-1.0.0.jar';
+  document.getElementById('gc-commit').textContent = 'git commit -m "'+msg+'"';
+}
+
+function copyGitCmds(){
+  const src = document.getElementById('src-jar').value.trim() || 'test-app-2.0.0.jar';
+  const msg = document.getElementById('commit-msg').value.trim() || 'Deploy: new JAR';
+  const cmds = [
+    'cd ~/Git\\ Repos/demo-spring-app',
+    'cp ../test-app/target/'+src+' target/demo-app-1.0.0.jar',
+    'git add -f target/demo-app-1.0.0.jar',
+    'git commit -m "'+msg+'"',
+    'git push'
+  ].join('\n');
+  navigator.clipboard.writeText(cmds).then(()=>toast('Commands copied!')).catch(()=>toast('Copy failed'));
+}
+
+async function triggerDeploy(){
+  if(!cfg.hook){ toast('Set Render Hook in Settings first'); return; }
+  const btn = document.getElementById('trigger-btn');
+  const status = document.getElementById('trigger-status');
+  btn.disabled = true;
+  btn.textContent = 'Triggering...';
+  dlog('info', 'Triggering Render deployment...');
+  try {
+    await fetch(cfg.hook, { method: 'POST', mode: 'no-cors' });
+    dlog('ok', 'Render deployment triggered!');
+    dlog('warn', 'Render will redeploy in ~2-3 minutes...');
+    dlog('ok', 'Check: ' + (cfg.backendUrl || 'your Render URL'));
+    status.style.display = 'block';
+    status.style.background = 'rgba(0,201,122,.1)';
+    status.style.color = 'var(--ok)';
+    status.style.border = '1px solid rgba(0,201,122,.2)';
+    status.textContent = 'Render deploy triggered! App updates in ~2-3 min';
+    toast('Render triggered!');
+  } catch(e) {
+    dlog('err', 'Error: ' + e.message);
+    status.style.display = 'block';
+    status.style.background = 'rgba(255,79,109,.1)';
+    status.style.color = 'var(--err)';
+    status.style.border = '1px solid rgba(255,79,109,.2)';
+    status.textContent = 'Failed - check Render hook in Settings';
+    toast('Failed - check Settings');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Trigger Render Redeploy';
+}
 function onFile(f){if(!f||!f.name.endsWith('.jar')){toast('.jar files only');return;}selFile=f;document.getElementById('jname').textContent=f.name;document.getElementById('jsize').textContent=fmtB(f.size);document.getElementById('jinfo').classList.add('show');document.getElementById('dbtn').disabled=false;setStep(1);dlog('info','Selected: '+f.name+' ('+fmtB(f.size)+')');}
 function clearFile(){selFile=null;document.getElementById('jinfo').classList.remove('show');document.getElementById('dbtn').disabled=true;document.getElementById('finput').value='';setStep(0);}
 async function deployJar(){

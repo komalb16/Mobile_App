@@ -688,7 +688,7 @@ async function deployJar(){
 function toB64(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(f);});}
 function fmtB(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB';}
 function setProg(v,l,p){document.getElementById('prog').className='prog'+(v?' show':'');document.getElementById('plabel').textContent=l;document.getElementById('ppct').textContent=p+'%';document.getElementById('pfill').style.width=p+'%';}
-function setStep(n){for(let i=1;i<=4;i++){const el=document.getElementById('st'+i);el.className='step'+(i<n?' done':i===n?' active':'');el.querySelector('.sd').textContent=i<n?'v':i;}}
+function setStep(n){for(let i=1;i<=4;i++){const el=document.getElementById('st'+i);if(!el)continue;el.className='step'+(i<n?' done':i===n?' active':'');el.querySelector('.sd').textContent=i<n?'v':i;}}
 function dlog(t,m){const el=document.getElementById('dlog');const d=document.createElement('div');d.className='log-'+t;d.textContent='['+new Date().toLocaleTimeString()+'] '+m;el.appendChild(d);el.scrollTop=el.scrollHeight;}
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 let tt;function toast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('show'),2800);}

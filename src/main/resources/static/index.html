@@ -525,54 +525,44 @@ async function deployJar_old(){
   btn.disabled=true; btn.textContent='Deploying...';
 
   try {
-    // ── Step 1: Create GitHub Release ──
-    setStep(2); setProg(true,'Creating GitHub Release...',10);
-    dlog('info','Creating GitHub Release...');
-    const tag = 'deploy-'+Date.now();
-    const releaseRes = await fetch('https://api.github.com/repos/'+cfg.ghRepo+'/releases',{
+    // ── Step 1: Create GitHub Release (via backend proxy) ──
+    setStep(2); setProg(true,'Creating release...',10);
+    dlog('info','Creating GitHub Release: '+label);
+    const tag = 'jar-'+Date.now();
+    const relRes = await fetch(api()+'/api/deploy/release',{
       method:'POST',
-      headers:{'Authorization':'Bearer '+cfg.ghToken,'Content-Type':'application/json'},
-      body: JSON.stringify({
-        tag_name: tag,
-        name: 'Deploy: '+selFile.name+' '+new Date().toLocaleString(),
-        body: 'Deployed via PWA Dashboard',
-        draft: false,
-        prerelease: false
-      })
+      headers:{'Content-Type':'application/json','X-GH-Token':cfg.ghToken,'X-GH-Repo':cfg.ghRepo},
+      body: JSON.stringify({tag:tag, name:label})
     });
-    if(!releaseRes.ok){
-      const e=await releaseRes.json();
-      throw new Error('Release failed: '+(e.message||releaseRes.status));
-    }
-    const release = await releaseRes.json();
-    dlog('ok','Release created: '+release.tag_name);
+    if(!relRes.ok){const e=await relRes.json();throw new Error('Release failed: '+(e.error||relRes.status));}
+    const release = await relRes.json();
+    const uploadUrl = release.upload_url.replace('{?name,label}','');
+    dlog('ok','Release created: '+tag);
 
-    // ── Step 2: Upload JAR as release asset ──
-    setStep(3); setProg(true,'Uploading JAR ('+fmtB(selFile.size)+')...',25);
-    dlog('info','Uploading JAR to GitHub Release...');
+    // ── Step 2: Upload JAR via backend proxy ──
+    setStep(3); setProg(true,'Uploading '+fmtB(selFile.size)+'...',25);
+    dlog('info','Uploading JAR via server (no size limit)...');
     dlog('warn','Large files may take a few minutes...');
-
-    // Use XHR for upload progress
-    const uploadUrl = release.upload_url.replace('{?name,label}','')+'?name=app.jar';
-    await uploadWithProgress(uploadUrl, selFile, cfg.ghToken);
-    dlog('ok','JAR uploaded to GitHub Release!');
-    dlog('info','Download URL: https://github.com/'+cfg.ghRepo+'/releases/tag/'+tag);
+    await uploadViaBackend(uploadUrl, selFile, cfg.ghToken);
+    dlog('ok','JAR uploaded successfully!');
 
     // ── Step 3: Trigger Render ──
     setStep(4); setProg(true,'Triggering Render...',95);
     if(cfg.hook){
       dlog('info','Triggering Render redeploy...');
       try{
-        await fetch(cfg.hook,{method:'POST',mode:'no-cors'});
+        await fetch(api()+'/api/deploy/trigger',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({hook:cfg.hook})
+        });
         dlog('ok','Render deployment triggered!');
         dlog('warn','Render will redeploy in ~2-3 minutes...');
-        dlog('ok','Your app will update at: '+(cfg.backendUrl||'your Render URL'));
-      }catch{
-        dlog('warn','Hook called - check Render dashboard to confirm');
+      }catch(e){
+        dlog('warn','Hook called - check Render dashboard: '+e.message);
       }
     } else {
-      dlog('warn','No Render hook set - JAR uploaded to GitHub only');
-      dlog('info','Add Render Deploy Hook in Settings for auto-redeploy');
+      dlog('warn','No Render hook set - JAR saved to library only');
     }
 
     setProg(true,'Complete!',100);
@@ -587,31 +577,27 @@ async function deployJar_old(){
   btn.disabled=false; btn.textContent='Upload & Deploy';
 }
 
-function uploadWithProgress(url, file, token){
+async function uploadViaBackend(uploadUrl, file, token){
+  // Upload via Spring Boot backend to avoid CORS on uploads.github.com
+  const formData = new FormData();
+  formData.append('file', file);
+  const xhr = new XMLHttpRequest();
   return new Promise((resolve, reject)=>{
-    const reader = new FileReader();
-    reader.onload = function(e){
-      const arrayBuffer = e.target.result;
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', url);
-      xhr.setRequestHeader('Authorization','token '+token);
-      xhr.setRequestHeader('Content-Type','application/octet-stream');
-      xhr.setRequestHeader('Accept','application/vnd.github+json');
-      xhr.upload.onprogress = ev=>{
-        if(ev.lengthComputable){
-          const pct = Math.round(25 + (ev.loaded/ev.total)*65);
-          setProg(true,'Uploading '+fmtB(ev.loaded)+' / '+fmtB(ev.total)+'...',pct);
-        }
-      };
-      xhr.onload = ()=>{
-        if(xhr.status===201) resolve(JSON.parse(xhr.responseText));
-        else reject(new Error('Upload failed: HTTP '+xhr.status+' - '+xhr.responseText.slice(0,200)));
-      };
-      xhr.onerror = ()=>reject(new Error('Network error during upload - check your internet connection'));
-      xhr.send(arrayBuffer);
+    xhr.open('POST', api()+'/api/deploy/upload');
+    xhr.setRequestHeader('X-GH-Token', token);
+    xhr.setRequestHeader('X-Upload-Url', uploadUrl);
+    xhr.upload.onprogress = ev=>{
+      if(ev.lengthComputable){
+        const pct = Math.round(25 + (ev.loaded/ev.total)*65);
+        setProg(true,'Uploading '+fmtB(ev.loaded)+' / '+fmtB(ev.total)+'...',pct);
+      }
     };
-    reader.onerror = ()=>reject(new Error('Failed to read file'));
-    reader.readAsArrayBuffer(file);
+    xhr.onload = ()=>{
+      if(xhr.status===200||xhr.status===201) resolve(JSON.parse(xhr.responseText));
+      else reject(new Error('Upload failed: HTTP '+xhr.status+' - '+xhr.responseText.slice(0,200)));
+    };
+    xhr.onerror = ()=>reject(new Error('Network error during upload'));
+    xhr.send(formData);
   });
 }
 function updateCmds(){

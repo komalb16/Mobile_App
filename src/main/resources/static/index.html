@@ -320,9 +320,10 @@ function renderJarItem(j, i){
   const isActive = i === 0;
   const safeTag = j.tag;
   const safeLabel = (j.label||j.tag).substring(0, 60);
+  const safeUrl = j.downloadUrl || '';
   const deployBtn = isActive
     ? '<span style="font-size:11px;color:var(--ok);padding:7px 12px">&#9989; Live</span>'
-    : '<button class="btn btn-p" onclick="deployFromLibrary(this)" data-tag="' + safeTag + '" data-label="' + safeLabel + '" style="padding:7px 14px;font-size:12px">&#128640; Deploy</button>';
+    : '<button class="btn btn-p" onclick="deployFromLibrary(this)" data-tag="' + safeTag + '" data-label="' + safeLabel + '" data-url="' + safeUrl + '" style="padding:7px 14px;font-size:12px">&#128640; Deploy</button>';
   const deleteBtn = '<button class="btn btn-g" onclick="deleteRelease(this)" data-id="' + j.id + '" data-tag="' + safeTag + '" style="padding:7px 12px;font-size:12px;color:var(--err)">&#128465;</button>';
   return '<div class="jar-item ' + (isActive ? 'active-jar' : '') + '" id="jaritem-' + j.id + '">'
     + '<span class="jar-badge ' + (isActive ? 'active' : 'inactive') + '">' + (isActive ? 'ACTIVE' : 'saved') + '</span>'
@@ -393,20 +394,39 @@ async function loadLibrary(){
 async function deployFromLibrary(btn){
   const tag = btn.dataset.tag;
   const label = btn.dataset.label;
+  const downloadUrl = btn.dataset.url;
   if(!cfg.hook){toast('Set Render Hook in Settings first');return;}
+  if(!cfg.ghToken||!cfg.ghRepo){toast('Set GitHub Token and Repo in Settings');return;}
   if(!confirm('Deploy "'+label+'" to Render? This will restart your app.')){return;}
-  dlog('info','Deploying '+label+' from library...');
+
+  btn.disabled=true; btn.textContent='Activating...';
   try{
-    await fetch(cfg.hook,{method:'POST',mode:'no-cors'});
+    // Step 1 — Write active-jar.txt to repo
+    dlog('info','Activating '+label+'...');
+    const activateRes = await fetch(api()+'/api/deploy/activate',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-GH-Token':cfg.ghToken,'X-GH-Repo':cfg.ghRepo},
+      body: JSON.stringify({downloadUrl:downloadUrl, label:label})
+    });
+    if(!activateRes.ok){const e=await activateRes.json();throw new Error(e.error||'Activate failed');}
+    dlog('ok',label+' set as active JAR');
+
+    // Step 2 — Trigger Render
+    dlog('info','Triggering Render redeploy...');
+    await fetch(api()+'/api/deploy/trigger',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({hook:cfg.hook})
+    });
     dlog('ok','Render deployment triggered!');
     dlog('warn','App will update in ~2-3 minutes...');
     toast('Deploying '+label+'!');
-    // Refresh library to update active badge
     setTimeout(loadLibrary, 500);
   }catch(e){
     dlog('err','Failed: '+e.message);
-    toast('Failed - check Settings');
+    toast('Failed: '+e.message);
   }
+  btn.disabled=false; btn.textContent='🚀 Deploy';
 }
 
 async function deleteRelease(btn){
@@ -543,12 +563,25 @@ async function deployJar_old(){
     setStep(3); setProg(true,'Uploading '+fmtB(selFile.size)+'...',25);
     dlog('info','Uploading JAR via server (no size limit)...');
     dlog('warn','Large files may take a few minutes...');
-    await uploadViaBackend(uploadUrl, selFile, cfg.ghToken);
+    const assetData = await uploadViaBackend(uploadUrl, selFile, cfg.ghToken);
+    const downloadUrl = assetData && assetData.browser_download_url ? assetData.browser_download_url : '';
     dlog('ok','JAR uploaded successfully!');
 
-    // ── Step 3: Trigger Render ──
-    setStep(4); setProg(true,'Triggering Render...',95);
-    if(cfg.hook){
+    // ── Step 3: Activate + Trigger Render ──
+    setStep(4); setProg(true,'Activating & deploying...',90);
+    if(deployNow && cfg.hook){
+      // Write active-jar.txt
+      if(downloadUrl){
+        dlog('info','Setting as active JAR...');
+        try{
+          await fetch(api()+'/api/deploy/activate',{
+            method:'POST',
+            headers:{'Content-Type':'application/json','X-GH-Token':cfg.ghToken,'X-GH-Repo':cfg.ghRepo},
+            body: JSON.stringify({downloadUrl:downloadUrl, label:label})
+          });
+          dlog('ok','Active JAR updated');
+        }catch(e){dlog('warn','Could not update active-jar.txt: '+e.message);}
+      }
       dlog('info','Triggering Render redeploy...');
       try{
         await fetch(api()+'/api/deploy/trigger',{
@@ -561,6 +594,8 @@ async function deployJar_old(){
       }catch(e){
         dlog('warn','Hook called - check Render dashboard: '+e.message);
       }
+    } else if(!deployNow){
+      dlog('ok','JAR saved to library! Deploy later from JAR Library tab.');
     } else {
       dlog('warn','No Render hook set - JAR saved to library only');
     }

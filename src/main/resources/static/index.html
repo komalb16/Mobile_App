@@ -81,6 +81,18 @@ main{position:relative;z-index:10;flex:1;padding:24px 36px;overflow-y:auto}
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 20px;font-family:'DM Mono',monospace;font-size:12px;z-index:999;transition:transform .3s cubic-bezier(.175,.885,.32,1.275);white-space:nowrap;pointer-events:none}
 #toast.show{transform:translateX(-50%) translateY(0)}
 /* ── Success Modal ── */
+/* ── Subtabs ── */
+.subtab{padding:8px 18px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Syne',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+.subtab.active{background:var(--accent);color:#000;border-color:var(--accent)}
+/* ── JAR Library item ── */
+.jar-item{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--bg);border:1px solid var(--border);border-radius:12px;transition:border-color .2s}
+.jar-item:hover{border-color:var(--accent)}
+.jar-item.active-jar{border-color:var(--ok);background:rgba(0,201,122,.05)}
+.jar-badge{padding:3px 10px;border-radius:20px;font-family:'DM Mono',monospace;font-size:10px;font-weight:700}
+.jar-badge.active{background:rgba(0,201,122,.15);color:var(--ok)}
+.jar-badge.inactive{background:var(--surface);color:var(--muted)}
+.jar-name{font-family:'DM Mono',monospace;font-size:12px;color:var(--text);font-weight:600}
+.jar-meta{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:2px}
 #success-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .25s}
 #success-modal.show{opacity:1;pointer-events:all}
 .modal-box{background:var(--surface);border:1px solid rgba(0,201,122,.3);border-radius:20px;padding:36px 40px;text-align:center;max-width:340px;width:90%;transform:scale(.9);transition:transform .25s cubic-bezier(.175,.885,.32,1.275)}
@@ -153,66 +165,87 @@ footer{text-align:center;padding:16px;font-family:'DM Mono',monospace;font-size:
   <!-- DEPLOY JAR -->
   <div class="view" id="view-upload">
 
-    <div class="steps">
-      <div class="step active" id="st1"><div class="sd">1</div><div class="sl">Select JAR</div></div>
-      <div class="step" id="st2"><div class="sd">2</div><div class="sl">Create Release</div></div>
-      <div class="step" id="st3"><div class="sd">3</div><div class="sl">Upload JAR</div></div>
-      <div class="step" id="st4"><div class="sd">4</div><div class="sl">Redeploy</div></div>
+    <!-- Sub tabs -->
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="subtab active" id="subtab-library" onclick="showSubtab('library')">&#128218; JAR Library</button>
+      <button class="subtab" id="subtab-upload" onclick="showSubtab('upload')">&#8679; Upload New JAR</button>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-
-      <!-- File selector -->
-      <div class="card">
-        <div class="lbl">&#128230; Select JAR File</div>
-        <div class="drop-zone" id="dzone"
-             ondragover="event.preventDefault();this.classList.add('over')"
-             ondragleave="this.classList.remove('over')"
-             ondrop="onDrop(event)">
-          <input type="file" accept=".jar" onchange="onFile(this.files[0])" id="finput"/>
-          <span class="dz-icon">&#9749;</span>
-          <div class="dz-title">Drop any JAR here</div>
-          <div class="dz-sub">Any size &middot; uploads to GitHub Releases</div>
+    <!-- ── JAR LIBRARY ── -->
+    <div id="sub-library">
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div class="lbl" style="margin:0">&#128218; JAR Library</div>
+          <button class="btn btn-g" onclick="loadLibrary()" style="padding:7px 14px;font-size:12px">&#8635; Refresh</button>
         </div>
-        <div class="jar-info" id="jinfo">
-          <div style="font-size:26px">&#128230;</div>
-          <div style="flex:1">
-            <div class="ji-name" id="jname">-</div>
-            <div class="ji-size" id="jsize">-</div>
+        <div id="lib-loading" style="text-align:center;padding:24px;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">
+          Loading JAR library...
+        </div>
+        <div id="lib-empty" style="display:none;text-align:center;padding:32px">
+          <div style="font-size:36px;margin-bottom:12px">&#128230;</div>
+          <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">No JARs uploaded yet.<br/>Upload your first JAR using the Upload tab.</div>
+        </div>
+        <div id="lib-list" style="display:none;display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+      <div class="card">
+        <div class="lbl">&#9989; Currently Active</div>
+        <div id="active-jar" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);padding:8px 0">
+          Checking...
+        </div>
+      </div>
+    </div>
+
+    <!-- ── UPLOAD NEW JAR ── -->
+    <div id="sub-upload" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="card">
+          <div class="lbl">&#128230; Select JAR File</div>
+          <div class="drop-zone" id="dzone"
+               ondragover="event.preventDefault();this.classList.add('over')"
+               ondragleave="this.classList.remove('over')"
+               ondrop="onDrop(event)">
+            <input type="file" accept=".jar" onchange="onFile(this.files[0])" id="finput"/>
+            <span class="dz-icon">&#9749;</span>
+            <div class="dz-title">Drop any JAR here</div>
+            <div class="dz-sub">Any size &middot; saved to JAR Library</div>
           </div>
-          <button class="btn btn-g" onclick="clearFile()" style="padding:7px 12px;font-size:12px">&#10005;</button>
+          <div class="jar-info" id="jinfo">
+            <div style="font-size:26px">&#128230;</div>
+            <div style="flex:1">
+              <div class="ji-name" id="jname">-</div>
+              <div class="ji-size" id="jsize">-</div>
+            </div>
+            <button class="btn btn-g" onclick="clearFile()" style="padding:7px 12px;font-size:12px">&#10005;</button>
+          </div>
+          <div class="prog" id="prog" style="margin-top:12px">
+            <div class="prog-hd"><span id="plabel">Uploading...</span><span id="ppct">0%</span></div>
+            <div class="prog-bar"><div class="prog-fill" id="pfill"></div></div>
+          </div>
         </div>
-        <div class="prog" id="prog" style="margin-top:12px">
-          <div class="prog-hd"><span id="plabel">Uploading...</span><span id="ppct">0%</span></div>
-          <div class="prog-bar"><div class="prog-fill" id="pfill"></div></div>
+        <div class="card">
+          <div class="lbl">&#128640; Upload &amp; Deploy</div>
+          <p style="font-size:12px;color:var(--muted);line-height:1.9;margin-bottom:16px">
+            Uploads JAR to <strong style="color:var(--text)">GitHub Releases</strong> and adds it to your library. Choose to deploy immediately or save for later.
+          </p>
+          <div class="field">
+            <label>Release Label (optional)</label>
+            <input type="text" id="rel-label" placeholder="e.g. v2.0 hotfix, feature-login..."/>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button class="btn btn-g btn-w" id="save-btn" onclick="uploadJar(false)" disabled>
+              &#128190; Save to Library
+            </button>
+            <button class="btn btn-p btn-w" id="dbtn" onclick="uploadJar(true)" disabled>
+              &#128640; Upload &amp; Deploy
+            </button>
+          </div>
         </div>
       </div>
-
-      <!-- Deploy button -->
       <div class="card">
-        <div class="lbl">&#128640; One-Click Deploy</div>
-        <p style="font-size:12px;color:var(--muted);line-height:1.9;margin-bottom:16px">
-          Uploads your JAR to <strong style="color:var(--text)">GitHub Releases</strong> (supports any size up to 2GB), then triggers Render to redeploy automatically.<br/><br/>
-          No Git Bash needed. Works entirely from the browser.
-        </p>
-        <button class="btn btn-p btn-w" id="dbtn" onclick="deployJar()" disabled>
-          &#128640; Upload &amp; Deploy
-        </button>
-        <div style="margin-top:12px;text-align:center">
-          <a href="https://dashboard.render.com" target="_blank"
-             style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-decoration:none">
-            Open Render Dashboard &#8594;
-          </a>
+        <div class="lbl">&#128220; Deploy Log</div>
+        <div class="log" id="dlog">
+          <span class="log-info">// Ready &mdash; select a JAR to begin</span>
         </div>
-      </div>
-
-    </div>
-
-    <!-- Deploy log -->
-    <div class="card">
-      <div class="lbl">&#128220; Deploy Log</div>
-      <div class="log" id="dlog">
-        <span class="log-info">// Ready &mdash; select a JAR to begin</span>
       </div>
     </div>
 
@@ -260,7 +293,7 @@ let tasks=[],filt='all',selFile=null;
 let cfg=JSON.parse(localStorage.getItem('cfg')||'{}');
 addEventListener('DOMContentLoaded',()=>{loadCfgUI();regSW();loadInfo();loadTasks();if(cfg.backendUrl)document.getElementById('render-url').textContent=cfg.backendUrl;});
 async function regSW(){if('serviceWorker' in navigator){try{await navigator.serviceWorker.register('/service-worker.js');document.getElementById('sw-s').textContent='Active';document.getElementById('sw-o').textContent='Yes';}catch{document.getElementById('sw-s').textContent='Failed';}}const sa=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone;document.getElementById('sw-i').textContent=sa?'Yes':'Not yet';}
-function sw(tab,btn){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));document.getElementById('view-'+tab).classList.add('active');btn.classList.add('active');}
+function sw(tab,btn){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));document.getElementById('view-'+tab).classList.add('active');btn.classList.add('active');if(tab==='upload'){showSubtab('library');}}
 function loadCfgUI(){if(cfg.backendUrl)document.getElementById('cfg-url').value=cfg.backendUrl;if(cfg.ghToken)document.getElementById('cfg-token').value=cfg.ghToken;if(cfg.ghRepo)document.getElementById('cfg-repo').value=cfg.ghRepo;if(cfg.ghPath)document.getElementById('cfg-path').value=cfg.ghPath;if(cfg.hook)document.getElementById('cfg-hook').value=cfg.hook;}
 function saveCfg(){cfg.backendUrl=document.getElementById('cfg-url').value.trim().replace(/\/$/,'');cfg.ghToken=document.getElementById('cfg-token').value.trim();cfg.ghRepo=document.getElementById('cfg-repo').value.trim();cfg.ghPath=document.getElementById('cfg-path').value.trim()||'target/demo-app-1.0.0.jar';cfg.hook=document.getElementById('cfg-hook').value.trim();localStorage.setItem('cfg',JSON.stringify(cfg));document.getElementById('render-url').textContent=cfg.backendUrl||'-';showModal();loadInfo();loadTasks();}function showModal(){const sub=document.getElementById('modal-sub');const lines=[];if(cfg.backendUrl)lines.push('Backend: '+cfg.backendUrl);if(cfg.ghRepo)lines.push('Repo: '+cfg.ghRepo);if(cfg.ghToken)lines.push('GitHub Token: saved');if(cfg.hook)lines.push('Render Hook: saved');sub.innerHTML=lines.join('<br/>')||'Configuration saved successfully.';document.getElementById('success-modal').classList.add('show');}function closeModal(){document.getElementById('success-modal').classList.remove('show');}
 async function testConn(){if(!cfg.backendUrl){toast('Set backend URL first');return;}try{const r=await fetch(cfg.backendUrl+'/actuator/health',{signal:AbortSignal.timeout(5000)});const d=await r.json();toast(d.status==='UP'?'Backend is UP!':'Status: '+d.status);}catch{toast('Cannot reach backend');}}
@@ -273,6 +306,195 @@ async function delTask(id){try{await fetch(api()+'/api/tasks/'+id,{method:'DELET
 function sf(f,btn){filt=f;document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render('tl-tasks',f==='all'?tasks:tasks.filter(t=>t.status===f));}
 function render(id,list){const el=document.getElementById(id);if(!list.length){el.innerHTML='<div class="empty"><div class="empty-i">Nothing here!</div></div>';return;}el.innerHTML=list.map((t,i)=>'<div class="ti" style="animation-delay:'+i*30+'ms"><span class="ts ts-'+t.status+'">'+t.status.replace('-',' ')+'</span><span class="tt">'+esc(t.title)+'</span><span class="tid">#'+t.id+'</span><button class="tdel" onclick="delTask('+t.id+')">x</button></div>').join('');}
 function stats(){document.getElementById('s-total').textContent=tasks.length;document.getElementById('s-done').textContent=tasks.filter(t=>t.status==='done').length;document.getElementById('s-prog').textContent=tasks.filter(t=>t.status==='in-progress').length;document.getElementById('s-todo').textContent=tasks.filter(t=>t.status==='todo').length;}
+// ── Subtabs ──
+function showSubtab(tab){
+  document.getElementById('sub-library').style.display = tab==='library' ? '' : 'none';
+  document.getElementById('sub-upload').style.display  = tab==='upload'  ? '' : 'none';
+  document.getElementById('subtab-library').classList.toggle('active', tab==='library');
+  document.getElementById('subtab-upload').classList.toggle('active',  tab==='upload');
+  if(tab==='library') loadLibrary();
+}
+
+// ── JAR Library ──
+function renderJarItem(j, i){
+  const isActive = i === 0;
+  const safeTag = j.tag;
+  const safeLabel = (j.label||j.tag).substring(0, 60);
+  const deployBtn = isActive
+    ? '<span style="font-size:11px;color:var(--ok);padding:7px 12px">&#9989; Live</span>'
+    : '<button class="btn btn-p" onclick="deployFromLibrary(this)" data-tag="' + safeTag + '" data-label="' + safeLabel + '" style="padding:7px 14px;font-size:12px">&#128640; Deploy</button>';
+  const deleteBtn = '<button class="btn btn-g" onclick="deleteRelease(this)" data-id="' + j.id + '" data-tag="' + safeTag + '" style="padding:7px 12px;font-size:12px;color:var(--err)">&#128465;</button>';
+  return '<div class="jar-item ' + (isActive ? 'active-jar' : '') + '" id="jaritem-' + j.id + '">'
+    + '<span class="jar-badge ' + (isActive ? 'active' : 'inactive') + '">' + (isActive ? 'ACTIVE' : 'saved') + '</span>'
+    + '<div style="flex:1;min-width:0">'
+    + '<div class="jar-name">' + safeLabel + '</div>'
+    + '<div class="jar-meta">' + safeTag + ' &middot; ' + fmtB(j.size) + ' &middot; ' + j.date.toLocaleDateString() + ' ' + j.date.toLocaleTimeString() + '</div>'
+    + '</div>'
+    + '<div style="display:flex;gap:8px">' + deployBtn + deleteBtn + '</div>'
+    + '</div>';
+}
+
+async function loadLibrary(){
+  if(!cfg.ghToken||!cfg.ghRepo){
+    document.getElementById('lib-loading').textContent='Set GitHub Token and Repo in Settings first';
+    return;
+  }
+  document.getElementById('lib-loading').style.display='';
+  document.getElementById('lib-empty').style.display='none';
+  document.getElementById('lib-list').style.display='none';
+
+  try{
+    const res = await fetch('https://api.github.com/repos/'+cfg.ghRepo+'/releases',{
+      headers:{'Authorization':'Bearer '+cfg.ghToken}
+    });
+    if(!res.ok) throw new Error('GitHub API error: '+res.status);
+    const releases = await res.json();
+
+    // Filter releases that have a JAR asset
+    const jars = releases
+      .map(r => {
+        const asset = r.assets.find(a => a.name.endsWith('.jar'));
+        return asset ? {
+          id: r.id,
+          tag: r.tag_name,
+          label: r.name,
+          date: new Date(r.published_at),
+          size: asset.size,
+          downloadUrl: asset.browser_download_url,
+          assetId: asset.id
+        } : null;
+      })
+      .filter(Boolean);
+
+    document.getElementById('lib-loading').style.display='none';
+
+    if(jars.length===0){
+      document.getElementById('lib-empty').style.display='';
+      return;
+    }
+
+    // Render library list
+    const list = document.getElementById('lib-list');
+    list.style.display='flex';
+    list.innerHTML = jars.map((j,i) => renderJarItem(j,i)).join('');
+
+    // Update active jar info
+    if(jars.length>0){
+      const active = jars[0];
+      document.getElementById('active-jar').innerHTML =
+        `<span style="color:var(--ok)">&#9679;</span> <strong style="color:var(--text)">${active.label||active.tag}</strong> &mdash; deployed ${active.date.toLocaleDateString()} at ${active.date.toLocaleTimeString()} &middot; ${fmtB(active.size)}`;
+    }
+
+  }catch(e){
+    document.getElementById('lib-loading').textContent='Error: '+e.message;
+  }
+}
+
+async function deployFromLibrary(btn){
+  const tag = btn.dataset.tag;
+  const label = btn.dataset.label;
+  if(!cfg.hook){toast('Set Render Hook in Settings first');return;}
+  if(!confirm('Deploy "'+label+'" to Render? This will restart your app.')){return;}
+  dlog('info','Deploying '+label+' from library...');
+  try{
+    await fetch(cfg.hook,{method:'POST',mode:'no-cors'});
+    dlog('ok','Render deployment triggered!');
+    dlog('warn','App will update in ~2-3 minutes...');
+    toast('Deploying '+label+'!');
+    // Refresh library to update active badge
+    setTimeout(loadLibrary, 500);
+  }catch(e){
+    dlog('err','Failed: '+e.message);
+    toast('Failed - check Settings');
+  }
+}
+
+async function deleteRelease(btn){
+  const releaseId = btn.dataset.id;
+  const tag = btn.dataset.tag;
+  if(!confirm('Delete release "'+tag+'" from library? This cannot be undone.')){return;}
+  try{
+    const res = await fetch('https://api.github.com/repos/'+cfg.ghRepo+'/releases/'+releaseId,{
+      method:'DELETE',
+      headers:{'Authorization':'Bearer '+cfg.ghToken}
+    });
+    if(res.ok||res.status===204){
+      toast('Deleted '+tag);
+      loadLibrary();
+    } else {
+      throw new Error('HTTP '+res.status);
+    }
+  }catch(e){
+    toast('Delete failed: '+e.message);
+  }
+}
+
+// ── Upload JAR ──
+async function uploadJar(deployNow){
+  if(!selFile){toast('Select a JAR first');return;}
+  if(!cfg.ghToken||!cfg.ghRepo){toast('Set GitHub Token and Repo in Settings');return;}
+
+  const dbtn=document.getElementById('dbtn');
+  const sbtn=document.getElementById('save-btn');
+  dbtn.disabled=true; sbtn.disabled=true;
+  dbtn.textContent='Uploading...';
+
+  const label = document.getElementById('rel-label').value.trim() || selFile.name.replace('.jar','');
+
+  try{
+    // Step 1 — Create Release
+    setStep(2); setProg(true,'Creating release...',10);
+    dlog('info','Creating GitHub Release: '+label);
+    const tag = 'jar-'+Date.now();
+    const relRes = await fetch('https://api.github.com/repos/'+cfg.ghRepo+'/releases',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+cfg.ghToken,'Content-Type':'application/json'},
+      body: JSON.stringify({tag_name:tag, name:label, body:'Uploaded via PWA Dashboard', draft:false, prerelease:false})
+    });
+    if(!relRes.ok){const e=await relRes.json();throw new Error('Release failed: '+(e.message||relRes.status));}
+    const release = await relRes.json();
+    dlog('ok','Release created: '+tag);
+
+    // Step 2 — Upload JAR
+    setStep(3); setProg(true,'Uploading '+fmtB(selFile.size)+'...',25);
+    dlog('info','Uploading JAR...');
+    const uploadUrl = release.upload_url.replace('{?name,label}','')+'?name=app.jar';
+    await uploadWithProgress(uploadUrl, selFile, cfg.ghToken);
+    dlog('ok','JAR saved to library: '+label);
+
+    // Step 3 — Deploy if requested
+    if(deployNow){
+      setStep(4); setProg(true,'Triggering Render...',95);
+      if(cfg.hook){
+        try{
+          await fetch(cfg.hook,{method:'POST',mode:'no-cors'});
+          dlog('ok','Render deployment triggered!');
+          dlog('warn','App updates in ~2-3 minutes...');
+        }catch{dlog('warn','Hook called - check Render dashboard');}
+      } else {
+        dlog('warn','No Render hook - JAR saved to library only');
+      }
+    } else {
+      dlog('ok','JAR saved to library! Deploy later from JAR Library tab.');
+    }
+
+    setProg(true,'Complete!',100);
+    toast(deployNow ? 'Deploying! ~2-3 min' : 'Saved to library!');
+    clearFile();
+    document.getElementById('rel-label').value='';
+
+    // Switch to library tab to show new entry
+    setTimeout(()=>showSubtab('library'), 1000);
+
+  }catch(e){
+    dlog('err','ERROR: '+e.message);
+    toast('Failed - see log');
+    setProg(false,'',0);
+  }
+  dbtn.disabled=false; sbtn.disabled=false;
+  dbtn.textContent='Upload & Deploy';
+}
+
 // ── File select ──
 function onDrop(e){e.preventDefault();document.getElementById('dzone').classList.remove('over');onFile(e.dataTransfer.files[0]);}
 function onFile(f){
@@ -295,7 +517,7 @@ function clearFile(){
 }
 
 // ── GitHub Releases Deploy ──
-async function deployJar(){
+async function deployJar_old(){
   if(!selFile){toast('Select a JAR first');return;}
   if(!cfg.ghToken||!cfg.ghRepo){toast('Set GitHub Token and Repo in Settings');return;}
 

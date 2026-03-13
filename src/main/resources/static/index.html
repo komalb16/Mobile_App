@@ -459,7 +459,7 @@ async function uploadJar(deployNow){
     setStep(3); setProg(true,'Uploading '+fmtB(selFile.size)+'...',25);
     dlog('info','Uploading JAR...');
     const uploadUrl = release.upload_url.replace('{?name,label}','')+'?name=app.jar';
-    await uploadWithProgress(uploadUrl, selFile, cfg.ghToken);
+    await uploadViaBackend(uploadUrl, selFile, cfg.ghToken);
     dlog('ok','JAR saved to library: '+label);
 
     // Step 3 — Deploy if requested
